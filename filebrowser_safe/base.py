@@ -80,10 +80,6 @@ class FileObjectAPI(object):
         """ path relative to the path returned by get_directory() """
         return path_strip(self.path, get_directory()).lstrip("/")
 
-    @property
-    def url(self):
-        return default_storage.url(self.path)
-
     # FOLDER ATTRIBUTES
 
     @property
@@ -111,27 +107,6 @@ class FileObjectAPI(object):
                 return True
         return False
 
-    def delete(self):
-        if self.is_folder:
-            default_storage.rmtree(self.path)
-            # shutil.rmtree(self.path)
-        else:
-            default_storage.delete(self.path)
-
-    def delete_versions(self):
-        for version in self.versions():
-            try:
-                default_storage.delete(version)
-            except:
-                pass
-
-    def delete_admin_versions(self):
-        for version in self.admin_versions():
-            try:
-                default_storage.delete(version)
-            except:
-                pass
-
 
 class FileObject(FileObjectAPI):
     """
@@ -153,6 +128,10 @@ class FileObject(FileObjectAPI):
     def name(self):
         return self.path
 
+    @property
+    def url(self):
+        return default_storage.url(self.path)
+
 
 class FieldFileObject(FieldFile, FileObjectAPI):
     """
@@ -165,3 +144,9 @@ class FieldFileObject(FieldFile, FileObjectAPI):
     def __init__(self, instance, field, path):
         FieldFile.__init__(self, instance, field, path)
         FileObjectAPI.__init__(self, path or '')
+
+    def delete(self, **kwargs):
+        if self.is_folder:
+            default_storage.rmtree(self.path)
+        else:
+            super(FieldFileObject, self).delete(**kwargs)
